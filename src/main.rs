@@ -1,4 +1,3 @@
-// mod components;
 mod audio;
 mod states;
 
@@ -66,16 +65,12 @@ fn main() -> amethyst::Result<()> {
             "sprite_sheet_processor",
             &[],
         )
-        .with_bundle(
-            InputBundle::<StringBindings>::new().with_bindings_from_file(key_bindings_path)?,
-        )?
         .with_bundle(AudioBundle::default())?
         .with(
             DjSystem::new(|music: &mut Music| music.music.next()),
             "dj_system",
             &[],
         )
-        .with_bundle(UiBundle::<DefaultBackend, StringBindings>::new())?
         // The renderer must be executed on the same thread consecutively, so we initialize it as thread_local
         // which will always execute on the main thread.
         .with_thread_local(RenderingSystem::<DefaultBackend, _>::new(
@@ -83,10 +78,6 @@ fn main() -> amethyst::Result<()> {
         ));
 
     let mut game = Application::build(assets_dir, Start)?
-        .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            144,
-        )
         .build(game_data)?;
 
     game.run();
@@ -180,57 +171,6 @@ impl GraphCreator<DefaultBackend> for ExampleGraph {
         factory: &mut Factory<DefaultBackend>,
         res: &Resources,
     ) -> GraphBuilder<DefaultBackend, Resources> {
-        use amethyst::renderer::rendy::{
-            graph::present::PresentNode,
-            hal::command::{ClearDepthStencil, ClearValue},
-        };
-
-        self.dirty = false;
-
-        // Retrieve a reference to the target window, which is created by the WindowBundle
-        let window = <ReadExpect<'_, Window>>::fetch(res);
-
-        // Create a new drawing surface in our window
-        let surface = factory.create_surface(&window);
-        // cache surface format to speed things up
-        let surface_format = *self
-            .surface_format
-            .get_or_insert_with(|| factory.get_surface_format(&surface));
-        let dimensions = self.dimensions.as_ref().unwrap();
-        let window_kind = Kind::D2(dimensions.width() as u32, dimensions.height() as u32, 1, 1);
-
-        // Begin building our RenderGraph
-        let mut graph_builder = GraphBuilder::new();
-        let color = graph_builder.create_image(
-            window_kind,
-            1,
-            surface_format,
-            Some(ClearValue::Color([0.34, 0.36, 0.52, 1.0].into())),
-        );
-
-        let depth = graph_builder.create_image(
-            window_kind,
-            1,
-            Format::D32Sfloat,
-            Some(ClearValue::DepthStencil(ClearDepthStencil(1.0, 0))),
-        );
-
-        // Create our first `Subpass`, which contains the DrawFlat2D and DrawUi render groups.
-        // We pass the subpass builder a description of our groups for construction
-        let pass = graph_builder.add_node(
-            SubpassBuilder::new()
-                .with_group(DrawFlat2DDesc::new().builder()) // Draws sprites
-                .with_group(DrawUiDesc::new().builder()) // Draws UI components
-                .with_color(color)
-                .with_depth_stencil(depth)
-                .into_pass(),
-        );
-
-        // Finally, add the pass to the graph.
-        // The PresentNode takes its input and applies it to the surface.
-        let _present = graph_builder
-            .add_node(PresentNode::builder(factory, surface, color).with_dependency(pass));
-
-        graph_builder
+        GraphBuilder::new()
     }
 }
