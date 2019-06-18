@@ -15,7 +15,8 @@ impl SimpleState for Start {
     fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {}
 
     fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        panic!();
+        // Trans::Pop // drop without unwind works
+        panic!() // this causes a seg fault
     }
 }
 
