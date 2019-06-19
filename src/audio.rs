@@ -21,7 +21,7 @@ fn load_audio_track(loader: &Loader, world: &World, file: &str) -> SourceHandle 
 
 /// Initialise audio in the world. This includes the background track and the
 /// sound effects.
-pub fn initialise_audio(world: &mut World) {
+pub fn initialise(world: &mut World) {
     use crate::{AUDIO_BOUNCE, AUDIO_MUSIC, AUDIO_SCORE};
 
     let (sound_effects, music) = {
